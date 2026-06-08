@@ -1,0 +1,2550 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a2856">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FLIP 7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="app-icon.svg">
+<title>FLIP 7</title>
+<style>
+  :root {
+    --teal: #2ec4b6;
+    --teal-dark: #1a8a82;
+    --yellow: #ffd166;
+    --yellow-dark: #e6a800;
+    --navy: #1a2856;
+    --navy-light: #2a3f7e;
+    --red: #ef476f;
+    --cream: #f8f4e8;
+    --orange: #ff6b35;
+    --green: #06d6a0;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--navy);
+    color: var(--cream);
+    min-height: 100dvh;
+    overflow: hidden;
+    user-select: none;
+    padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; flex-direction: column; height: 100dvh; }
+  .screen.active { display: flex; }
+
+  /* ── SETUP SCREEN ── */
+  #setup-screen {
+    background: linear-gradient(160deg, #1a2856 0%, #0d1a40 60%, #0a1228 100%);
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: max(var(--safe-top), 16px) max(var(--safe-right), 16px) max(var(--safe-bottom), 16px) max(var(--safe-left), 16px);
+  }
+
+  .logo {
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: clamp(64px, 18vw, 120px);
+    color: var(--yellow);
+    text-shadow: 4px 4px 0 var(--orange), 8px 8px 0 rgba(0,0,0,0.4);
+    letter-spacing: 4px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .logo-sub {
+    font-size: clamp(11px, 3vw, 14px);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--teal);
+    font-weight: 800;
+    margin-bottom: 24px;
+  }
+
+  .setup-box {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .setup-label {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 12px;
+  }
+
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .player-num {
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 22px;
+    color: var(--yellow);
+    min-width: 28px;
+  }
+  .player-input {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--cream);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    outline: none;
+  }
+  .player-input:focus { border-color: var(--teal); background: rgba(46,196,182,0.1); }
+
+  .player-count-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .count-btn {
+    width: 38px; height: 38px;
+    background: var(--navy-light);
+    border: 2px solid var(--teal);
+    border-radius: 10px;
+    color: var(--teal);
+    font-size: 22px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .count-btn:active { transform: scale(0.9); background: var(--teal); color: var(--navy); }
+  .count-display {
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 32px;
+    color: var(--yellow);
+    min-width: 40px;
+    text-align: center;
+  }
+
+  .btn-start {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--yellow), var(--orange));
+    border: none;
+    border-radius: 14px;
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 26px;
+    letter-spacing: 3px;
+    color: var(--navy);
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(255,107,53,0.4);
+    transition: all 0.15s;
+  }
+  .btn-start:active { transform: scale(0.97); box-shadow: none; }
+
+  /* ── GAME SCREEN ── */
+  #game-screen {
+    background: linear-gradient(180deg, #0d1a40 0%, #1a2856 100%);
+    padding:
+      max(var(--safe-top), 8px)
+      max(var(--safe-right), 8px)
+      max(var(--safe-bottom), 8px)
+      max(var(--safe-left), 8px);
+    gap: 0;
+    overflow: hidden;
+  }
+
+  /* Top bar */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0 8px 0;
+    flex-shrink: 0;
+  }
+  .round-info {
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 20px;
+    color: var(--yellow);
+    letter-spacing: 2px;
+  }
+  .deck-info {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 1px;
+  }
+
+  /* Scores strip */
+  .scores-strip {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    flex-shrink: 0;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+  .scores-strip::-webkit-scrollbar { display: none; }
+
+  .score-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255,255,255,0.06);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 4px 10px;
+    min-width: 56px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .scores-strip.compact-scores .score-chip {
+    min-width: 42px;
+    padding: 4px 8px;
+  }
+  .score-chip.current-dealer { border-color: var(--yellow); }
+  .score-chip .chip-name {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.6);
+    max-width: 64px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .score-chip .chip-pts {
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 20px;
+    color: var(--cream);
+    line-height: 1;
+  }
+
+  /* Players area */
+  .players-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .players-area::-webkit-scrollbar { display: none; }
+
+  /* iPad landscape: 2-column grid */
+  @media (orientation: landscape) and (min-width: 768px) {
+    .players-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto;
+      align-content: start;
+    }
+  }
+
+  /* Player card */
+  .player-card {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 10px 12px;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .player-card.active-turn {
+    border-color: var(--teal);
+    background: rgba(46,196,182,0.08);
+    box-shadow: 0 0 20px rgba(46,196,182,0.2);
+  }
+  .player-card.busted {
+    border-color: var(--red);
+    background: rgba(239,71,111,0.06);
+    opacity: 0.6;
+  }
+  .player-card.stayed {
+    border-color: var(--green);
+    background: rgba(6,214,160,0.06);
+    opacity: 0.75;
+  }
+  .player-card.flip7-winner {
+    border-color: var(--yellow);
+    background: rgba(255,209,102,0.12);
+    box-shadow: 0 0 30px rgba(255,209,102,0.3);
+  }
+
+  .player-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .player-name-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dealer-badge {
+    background: var(--yellow);
+    color: var(--navy);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    text-transform: uppercase;
+  }
+  .player-name {
+    font-weight: 900;
+    font-size: 14px;
+    color: var(--cream);
+  }
+  .player-status {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+  }
+  .status-active { color: var(--teal); }
+  .status-busted { color: var(--red); }
+  .status-stayed { color: var(--green); }
+  .status-flip7 { color: var(--yellow); }
+
+  /* Cards row */
+  .cards-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 52px;
+    align-items: center;
+  }
+
+  @media (max-width: 480px) {
+    .cards-row.compact-cards {
+      flex-wrap: nowrap;
+      gap: 0;
+      overflow: visible;
+    }
+    .cards-row.compact-cards .mini-card:not(:last-child) {
+      margin-right: var(--card-overlap, 0px);
+    }
+  }
+
+  /* Mini card */
+  .mini-card {
+    width: 38px;
+    height: 52px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 20px;
+    line-height: 1;
+    border: 2px solid rgba(0,0,0,0.3);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .mini-card.num { background: linear-gradient(145deg, #f8f4e8, #e8e0cc); color: var(--navy); }
+  .mini-card.num-0 { background: linear-gradient(145deg, #ddd8c4, #c8c0a8); color: var(--navy); }
+  .mini-card.mod { background: linear-gradient(145deg, #ffd166, #e6a800); color: var(--navy); font-size: 14px; }
+  .mini-card.action-freeze { background: linear-gradient(145deg, #6eb5ff, #2a7dd4); color: white; font-size: 10px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 900; }
+  .mini-card.action-flip3 { background: linear-gradient(145deg, #aadd44, #66aa00); color: var(--navy); font-size: 10px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 900; }
+  .mini-card.action-sc { background: linear-gradient(145deg, #ff9988, #cc4433); color: white; font-size: 9px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 900; text-align: center; }
+  .mini-card.action-used { opacity: 0.42; filter: grayscale(0.35) brightness(0.75); }
+  .mini-card sub { font-size: 9px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 800; line-height: 1; }
+
+  /* Round score indicator */
+  .round-score {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--yellow);
+    margin-top: 4px;
+  }
+
+  /* Bottom action area */
+  .action-area {
+    flex-shrink: 0;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .action-prompt {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+  .action-prompt strong { color: var(--teal); }
+
+  .action-btns {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-hit {
+    flex: 1;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+    border: none;
+    border-radius: 12px;
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(46,196,182,0.3);
+    transition: all 0.15s;
+  }
+  .btn-hit:active { transform: scale(0.96); }
+  .btn-hit:disabled { opacity: 0.3; cursor: default; transform: none; }
+
+  .btn-stay {
+    flex: 1;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--green), #04a87e);
+    border: none;
+    border-radius: 12px;
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--navy);
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(6,214,160,0.3);
+    transition: all 0.15s;
+  }
+  .btn-stay:active { transform: scale(0.96); }
+  .btn-stay:disabled { opacity: 0.3; cursor: default; transform: none; }
+
+  /* Action card target selection */
+  .target-selection {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .target-selection.visible { display: flex; }
+  .target-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--yellow);
+    text-align: center;
+  }
+  .target-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .btn-target {
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    color: var(--cream);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-target:active { background: var(--teal); border-color: var(--teal); }
+
+  /* Flip 3 forced cards indicator */
+  .flip3-indicator {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(170,221,68,0.15);
+    border: 1px solid rgba(170,221,68,0.4);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #aadd44;
+  }
+  .flip3-indicator.visible { display: flex; }
+  .flip3-dots { display: flex; gap: 4px; }
+  .flip3-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(170,221,68,0.3);
+    border: 1.5px solid #aadd44;
+  }
+  .flip3-dot.filled { background: #aadd44; }
+
+  /* ── OVERLAY / MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(10,18,40,0.92);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    padding-top: max(var(--safe-top), 20px);
+    padding-bottom: max(var(--safe-bottom), 20px);
+  }
+  .modal-overlay.visible { display: flex; }
+
+  .modal-box {
+    background: linear-gradient(160deg, #1e2f6a, #0d1a40);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+  }
+
+  .modal-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+  }
+  .modal-title {
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 32px;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+  .modal-title.bust { color: var(--red); }
+  .modal-title.flip7 { color: var(--yellow); }
+  .modal-title.round-end { color: var(--teal); }
+  .modal-title.game-over { color: var(--yellow); }
+
+  .modal-body {
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .score-list {
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 16px;
+    text-align: left;
+  }
+  .score-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .score-list-item:last-child { border-bottom: none; }
+  .score-list-item .sli-name { color: rgba(255,255,255,0.8); }
+  .score-list-item .sli-pts { font-family: Impact, 'Arial Black', system-ui, sans-serif; font-size: 18px; color: var(--yellow); }
+  .score-list-item .sli-total { font-family: Impact, 'Arial Black', system-ui, sans-serif; font-size: 14px; color: rgba(255,255,255,0.5); }
+  .score-list-item.leading .sli-name { color: var(--teal); }
+
+  .btn-modal {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--yellow), var(--orange));
+    border: none;
+    border-radius: 12px;
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--navy);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-modal:active { transform: scale(0.97); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes cardFlip {
+    0% { transform: rotateY(90deg) scale(0.8); opacity: 0; }
+    100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+  }
+  .card-flip-in { animation: cardFlip 0.3s ease-out forwards; }
+
+  @keyframes bustShake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+  .bust-shake { animation: bustShake 0.4s ease-out; }
+
+  @keyframes flip7Glow {
+    0%,100% { box-shadow: 0 0 20px rgba(255,209,102,0.3); }
+    50% { box-shadow: 0 0 40px rgba(255,209,102,0.7), 0 0 80px rgba(255,107,53,0.3); }
+  }
+  .flip7-anim { animation: flip7Glow 1s ease-in-out infinite; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+
+  /* ── WINNER SCREEN ── */
+  #winner-screen {
+    background: linear-gradient(160deg, #1a2856, #0a1228);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: max(var(--safe-top), 20px) max(var(--safe-right), 20px) max(var(--safe-bottom), 20px) max(var(--safe-left), 20px);
+  }
+
+  .trophy { font-size: 80px; margin-bottom: 8px; }
+  .winner-title {
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: clamp(36px, 10vw, 64px);
+    color: var(--yellow);
+    letter-spacing: 4px;
+    text-shadow: 3px 3px 0 var(--orange);
+    margin-bottom: 4px;
+  }
+  .winner-name {
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: clamp(28px, 8vw, 52px);
+    color: var(--teal);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .winner-score {
+    font-size: 16px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 24px;
+  }
+
+  .final-scores {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 16px;
+    width: 100%;
+    max-width: 340px;
+    margin-bottom: 24px;
+  }
+
+  .btn-new-game {
+    padding: 12px 30px;
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .btn-new-game:active { border-color: var(--teal); color: var(--teal); }
+
+  /* ── HELP BUTTON ── */
+  .btn-help {
+    padding: 10px 20px;
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+    margin-top: 10px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .btn-help:active { border-color: var(--teal); color: var(--teal); }
+  /* ── AI TOGGLE ── */
+  .ai-toggle {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .ai-toggle:active { transform: scale(0.88); }
+  .ai-toggle.is-ai {
+    background: rgba(46,196,182,0.15);
+    border-color: var(--teal);
+  }
+  .player-input:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  /* ── AI THINKING BUBBLE ── */
+  .ai-thinking {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: rgba(46,196,182,0.1);
+    border: 1px solid rgba(46,196,182,0.3);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--teal);
+    margin-bottom: 8px;
+    animation: fadeIn 0.2s ease-out;
+  }
+  .ai-thinking.visible { display: flex; }
+  .ai-thinking-dots {
+    display: flex; gap: 3px; align-items: center;
+  }
+  .ai-thinking-dots span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--teal); display: inline-block;
+    animation: aiDot 1.2s ease-in-out infinite;
+  }
+  .ai-thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .ai-thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes aiDot {
+    0%,80%,100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+  .ai-badge {
+    display: inline-block;
+    background: rgba(46,196,182,0.18);
+    border: 1px solid rgba(46,196,182,0.4);
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--teal);
+    padding: 1px 5px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .ai-prob {
+    font-size: 10px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+  .ai-prob.danger { color: var(--red); }
+  .ai-prob.safe { color: var(--green); }
+
+
+  .btn-help-topbar {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,0.18);
+    border-radius: 8px;
+    color: rgba(255,255,255,0.5);
+    font-size: 16px;
+    width: 32px; height: 32px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-help-topbar:active { border-color: var(--teal); color: var(--teal); }
+
+  /* ── HELP MODAL ── */
+  .help-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(10,18,40,0.96);
+    z-index: 200;
+    flex-direction: column;
+    padding:
+      max(var(--safe-top), 16px)
+      max(var(--safe-right), 16px)
+      max(var(--safe-bottom), 16px)
+      max(var(--safe-left), 16px);
+    overflow-y: auto;
+  }
+  .help-overlay.visible { display: flex; }
+
+  .help-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+  }
+  .help-title {
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 36px;
+    color: var(--yellow);
+    letter-spacing: 3px;
+  }
+  .btn-close-help {
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    color: rgba(255,255,255,0.7);
+    font-size: 20px;
+    width: 40px; height: 40px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-close-help:active { border-color: var(--red); color: var(--red); }
+
+  .help-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 560px;
+    width: 100%;
+    margin: 0 auto;
+    padding-bottom: 8px;
+  }
+
+  .help-section {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .help-section-title {
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--teal);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .help-section p, .help-section li {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.6;
+    margin-bottom: 5px;
+  }
+  .help-section ul { padding-left: 16px; }
+  .help-section li { margin-bottom: 4px; }
+  .help-hl { color: var(--yellow); font-weight: 800; }
+  .help-hl-red { color: var(--red); font-weight: 800; }
+  .help-hl-green { color: var(--green); font-weight: 800; }
+  .help-hl-teal { color: var(--teal); font-weight: 800; }
+
+  .card-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .card-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 8px;
+  }
+  .cl-swatch {
+    width: 36px; height: 46px;
+    border-radius: 5px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 18px;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(0,0,0,0.3);
+  }
+  .cl-swatch.num { background: linear-gradient(145deg,#f8f4e8,#e8e0cc); color: var(--navy); }
+  .cl-swatch.mod { background: linear-gradient(145deg,#ffd166,#e6a800); color: var(--navy); font-size: 13px; }
+  .cl-swatch.fr { background: linear-gradient(145deg,#6eb5ff,#2a7dd4); color: white; font-size: 11px; font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-weight:900; }
+  .cl-swatch.f3 { background: linear-gradient(145deg,#aadd44,#66aa00); color: var(--navy); font-size: 11px; font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-weight:900; }
+  .cl-swatch.sc { background: linear-gradient(145deg,#ff9988,#cc4433); color: white; font-size: 11px; font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-weight:900; text-align:center; }
+  .cl-text { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.75); line-height: 1.4; }
+  .cl-text strong { color: var(--cream); display: block; font-size: 13px; }
+
+  .score-formula {
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: Impact, 'Arial Black', system-ui, sans-serif;
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: var(--cream);
+    margin-top: 6px;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SETUP SCREEN ═══════════════ -->
+<div id="setup-screen" class="screen active">
+  <div class="logo">FLIP 7</div>
+  <div class="logo-sub">Paras korttipeli ikinä!</div>
+  <div class="setup-box">
+    <div class="setup-label">Pelaajien määrä</div>
+    <div class="player-count-row">
+      <button class="count-btn" id="dec-btn">−</button>
+      <div class="count-display" id="count-display">3</div>
+      <button class="count-btn" id="inc-btn">+</button>
+    </div>
+    <div class="setup-label">Pelaajien nimet</div>
+    <div id="player-inputs"></div>
+    <button class="btn-start" id="start-btn">ALOITA PELI</button>
+  </div>
+  <button class="btn-help" id="help-btn-setup">❓ OHJEET</button>
+</div>
+
+<!-- ═══════════════ GAME SCREEN ═══════════════ -->
+<div id="game-screen" class="screen">
+  <div class="top-bar">
+    <div class="round-info" id="round-info">KIERROS 1</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="deck-info" id="deck-info">94 korttia</div>
+      <button class="btn-help-topbar" id="help-btn-game">?</button>
+    </div>
+  </div>
+  <div class="scores-strip" id="scores-strip"></div>
+  <div class="players-area" id="players-area"></div>
+  <div class="action-area">
+    <div class="flip3-indicator" id="flip3-indicator">
+      <span>PAKKO NOSTAA:</span>
+      <div class="flip3-dots" id="flip3-dots"></div>
+    </div>
+    <div class="ai-thinking" id="ai-thinking"><div class="ai-thinking-dots"><span></span><span></span><span></span></div><span id="ai-thinking-text">Tekoäly miettii...</span></div>
+    <div id="normal-actions">
+      <div class="action-prompt" id="action-prompt"></div>
+      <div class="action-btns">
+        <button class="btn-hit" id="hit-btn">NOSTA</button>
+        <button class="btn-stay" id="stay-btn">PYSÄYTÄ</button>
+      </div>
+    </div>
+    <div class="target-selection" id="target-selection">
+      <div class="target-label" id="target-label"></div>
+      <div class="target-btns" id="target-btns"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ WINNER SCREEN ═══════════════ -->
+<div id="winner-screen" class="screen">
+  <div class="trophy">🏆</div>
+  <div class="winner-title">VOITTAJA!</div>
+  <div class="winner-name" id="winner-name"></div>
+  <div class="winner-score" id="winner-score"></div>
+  <div class="final-scores" id="final-scores"></div>
+  <button class="btn-new-game" id="new-game-btn">UUSI PELI</button>
+</div>
+
+<!-- ═══════════════ MODAL ═══════════════ -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box" id="modal-box">
+    <div class="modal-icon" id="modal-icon"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="score-list" id="modal-score-list"></div>
+    <button class="btn-modal" id="modal-btn">OK</button>
+  </div>
+</div>
+
+<!-- ═══════════════ HELP OVERLAY ═══════════════ -->
+<div class="help-overlay" id="help-overlay">
+  <div class="help-header">
+    <div class="help-title">📖 OHJEET</div>
+    <button class="btn-close-help" id="close-help-btn">✕</button>
+  </div>
+  <div class="help-content">
+
+    <div class="help-section">
+      <div class="help-section-title">🎯 Tavoite</div>
+      <p>Ole ensimmäinen pelaaja, joka saavuttaa <span class="help-hl">200 pistettä</span>. Pisteet lasketaan käänneltyjen numerokorttien summasta.</p>
+      <p>Jos saat 7 eri numerokorttia riviisi → <span class="help-hl">FLIP 7!</span> Kierros päättyy heti ja saat <span class="help-hl">+15 bonuspistettä</span>.</p>
+      <p>Jos nostat saman numeron kuin sinulla jo on → <span class="help-hl-red">PALOIT!</span> Saat 0 pistettä kierrokselta.</p>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">🔄 Kierroksen kulku</div>
+      <p><strong>1.</strong> Jakaja jakaa yhden kortin kullekin pelaajalle vuorotellen. Action-kortit keskeytetään heti.</p>
+      <p><strong>2.</strong> Jokainen pelaaja valitsee vuorollaan: <span class="help-hl-teal">NOSTA</span> (saa uuden kortin) tai <span class="help-hl-green">PYSÄYTÄ</span> (pankkaa pisteet ja poistuu kierrokselta).</p>
+      <p><strong>3.</strong> Kierros päättyy kun kaikki ovat palaneet tai pysähtyneet — tai joku Flip 7:ää.</p>
+      <p>Pakka ei sekoitu kierrosten välissä. Jakaja siirtyy vasemmalle joka kierroksella.</p>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">🃏 Kortit</div>
+      <div class="card-legend">
+        <div class="card-legend-item">
+          <div class="cl-swatch num">7</div>
+          <div class="cl-text"><strong>Numerokortit 0–12</strong>Arvo = pisteet. Mitä arvokkaampi, sitä enemmän kortteja pakassa (12 kpl kaksitoista, jne.)</div>
+        </div>
+        <div class="card-legend-item">
+          <div class="cl-swatch mod">+6</div>
+          <div class="cl-text"><strong>Pistekertoimet +2–+10</strong>Lisää kyseisen määrän pisteitä numerokorttien summaan.</div>
+        </div>
+        <div class="card-legend-item">
+          <div class="cl-swatch mod">×2</div>
+          <div class="cl-text"><strong>Pistekerroin ×2</strong>Kaksinkertaistaa numerokorttien summan. Lasketaan ennen +N-kortteja.</div>
+        </div>
+        <div class="card-legend-item">
+          <div class="cl-swatch fr">❄️ PAKASTE</div>
+          <div class="cl-text"><strong>Pakaste</strong>Kohde pankkaa pisteensä ja poistuu kierrokselta välittömästi.</div>
+        </div>
+        <div class="card-legend-item">
+          <div class="cl-swatch f3">🃏 NOSTA 3</div>
+          <div class="cl-text"><strong>Nosta Kolme</strong>Kohde pakotetaan nostamaan 3 korttia peräkkäin.</div>
+        </div>
+        <div class="card-legend-item">
+          <div class="cl-swatch sc">❤️ 2.MAHDOLL.</div>
+          <div class="cl-text"><strong>Toinen Mahdollisuus</strong>Säästää yhden kerran palamiselta: duplikaatti hylätään automaattisesti.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">🧮 Pisteiden laskenta</div>
+      <div class="score-formula">
+        1. Laske numerokorttien summa<br>
+        2. Jos ×2-kortti → kerro ×2<br>
+        3. Lisää +N-kortit<br>
+        4. Flip 7 → +15 bonusta<br>
+        5. Palaminen → 0 pistettä
+      </div>
+      <p style="margin-top:8px;">Pistekertoimet ja action-kortit <span class="help-hl">eivät</span> laske Flip 7:ään — tarvitaan tasan 7 eri numerokorttia.</p>
+    </div>
+
+    <div class="help-section">
+      <div class="help-section-title">⚡ Action-kortit (lisätietoa)</div>
+      <ul>
+        <li>Action-kortit voi kohdistaa <span class="help-hl">keneen tahansa aktiiviseen pelaajaan</span>, myös itseen.</li>
+        <li><span class="help-hl">Nosta Kolme:</span> Action-kortit sen aikana ratkotaan vasta kaikkien 3 kortin jälkeen. Toinen Mahdollisuus -kortti voidaan ottaa talteen heti.</li>
+        <li><span class="help-hl">Toinen Mahdollisuus:</span> Pelaajalla voi olla vain yksi kerrallaan. Jos saa toisen, se siirretään toiselle pelaajalle. Kaikki TM-kortit hylätään kierroksen lopussa.</li>
+        <li>Jos olet ainoa aktiivinen pelaaja, action-kortti kohdistuu itseesi.</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  DECK DEFINITION
+// ════════════════════════════════════════════════════════════
+function buildDeck() {
+  const cards = [];
+  // Number cards: value => count
+  const nums = [[12,12],[11,11],[10,10],[9,9],[8,8],[7,7],[6,6],[5,5],[4,4],[3,3],[2,2],[1,1],[0,1]];
+  for (const [v, cnt] of nums) {
+    for (let i = 0; i < cnt; i++) cards.push({ type: 'number', value: v });
+  }
+  // Score modifiers: one copy each (official 94-card deck)
+  for (const v of [2,4,6,8,10]) {
+    cards.push({ type: 'modifier', mod: '+'+v });
+  }
+  cards.push({ type: 'modifier', mod: 'x2' });
+  // Action cards x3 each
+  for (let i = 0; i < 3; i++) cards.push({ type: 'action', action: 'freeze' });
+  for (let i = 0; i < 3; i++) cards.push({ type: 'action', action: 'flip3' });
+  for (let i = 0; i < 3; i++) cards.push({ type: 'action', action: 'secondchance' });
+  return cards;
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ════════════════════════════════════════════════════════════
+//  GAME STATE
+// ════════════════════════════════════════════════════════════
+let state = {};
+let lastRenderedCardKeysByPlayer = [];
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
+function initGame(playerNames, aiFlags) {
+  const allCards = shuffle(buildDeck());
+  lastRenderedCardKeysByPlayer = [];
+  state = {
+    playerNames,
+    aiFlags: aiFlags || playerNames.map(() => false),
+    totalScores: playerNames.map(() => 0),
+    round: 1,
+    deck: allCards,
+    discardPile: [],
+    dealerIdx: 0,
+    // Round state:
+    roundActive: true,
+    players: null,
+    currentIdx: 0,
+    flip3State: null, // { remaining, pending: [] }
+    pendingActionCard: null, // action card awaiting target selection
+    resolvingAction: false,
+    roundScored: false,
+    aiTurnTimer: null,
+  };
+  startRound();
+}
+
+function startRound() {
+  lastRenderedCardKeysByPlayer = [];
+  const n = state.playerNames.length;
+  state.players = state.playerNames.map((name, i) => ({
+    name,
+    isAI: state.aiFlags[i] || false,
+    cards: [],       // number cards
+    modifiers: [],   // modifier cards
+    actionCards: [], // action cards kept for round-end discard and state checks
+    tableCards: [],  // visible cards in the order they were received
+    secondChance: false,
+    status: 'active', // active | stayed | busted | flip7
+    isDealer: i === state.dealerIdx,
+    lastAIProb: null, // for display
+  }));
+  state.roundActive = true;
+  state.currentIdx = state.dealerIdx;
+  state.flip3State = null;
+  state.pendingActionCard = null;
+  state.resolvingAction = false;
+  state.roundScored = false;
+  clearAITurnTimer();
+
+  // Initial deal: one card to each player starting from dealer
+  dealInitialCards();
+}
+
+function dealInitialCards() {
+  // Deal one card to each player in order starting from dealer
+  const n = state.players.length;
+  let dealQueue = [];
+  for (let i = 0; i < n; i++) {
+    dealQueue.push((state.dealerIdx + i) % n);
+  }
+
+  // Process deal one by one, but action cards interrupt
+  processDealQueue(dealQueue, 0);
+}
+
+function processDealQueue(queue, idx) {
+  if (idx >= queue.length) {
+    // Done dealing initial cards; start turn phase
+    state.currentIdx = (state.dealerIdx - 1 + state.players.length) % state.players.length;
+    advanceToNextActive();
+    renderGame();
+    return;
+  }
+  const pIdx = queue[idx];
+  const player = state.players[pIdx];
+
+  // Skip if player already busted or something (shouldn't happen initially)
+  if (player.status !== 'active') {
+    processDealQueue(queue, idx + 1);
+    return;
+  }
+
+  const card = drawCard();
+  if (!card) { processDealQueue(queue, idx + 1); return; }
+
+  if (card.type === 'action') {
+    // Pause dealing, resolve action
+    // For initial deal, action cards need target selection
+    // Then continue deal after resolution
+    handleActionCardDuringDeal(card, pIdx, queue, idx);
+  } else {
+    applyCardToPlayer(pIdx, card);
+    processDealQueue(queue, idx + 1);
+  }
+}
+
+function handleActionCardDuringDeal(card, receiverIdx, queue, qIdx) {
+  state.pendingActionCard = {
+    card,
+    sourceIdx: receiverIdx,
+    isDealPhase: true,
+    onResolve: () => {
+      processDealQueue(queue, qIdx + 1);
+    }
+  };
+  renderGame();
+
+  // If the current dealer-turn player is AI, let AI pick target automatically
+  const dealingPlayer = state.players[receiverIdx];
+  if (dealingPlayer && dealingPlayer.isAI) {
+    aiChooseActionTarget(card, true);
+  } else {
+    showTargetSelection(card, true);
+  }
+}
+
+function drawCard() {
+  if (state.deck.length === 0) {
+    // Reshuffle discard pile
+    if (state.discardPile.length === 0) return null;
+    state.deck = shuffle([...state.discardPile]);
+    state.discardPile = [];
+  }
+  return state.deck.pop();
+}
+
+function hasUnusedSecondChance(player) {
+  return !!player && (
+    player.secondChance ||
+    player.actionCards.some(c => c.action === 'secondchance' && !c.used) ||
+    (player.tableCards || []).some(c => c.action === 'secondchance' && !c.used)
+  );
+}
+
+function applyCardToPlayer(pIdx, card) {
+  const player = state.players[pIdx];
+  if (card.type === 'number') {
+    // Check for bust
+    const duplicate = player.cards.find(c => c.value === card.value);
+    if (duplicate) {
+      // Check second chance
+      if (hasUnusedSecondChance(player)) {
+        player.secondChance = false;
+        // Show the neutralized duplicate and mark Second Chance as used for display.
+        card.used = true;
+        card.neutralized = true;
+        player.tableCards.push(card);
+        state.discardPile.push(card);
+        const scIdx = player.actionCards.findIndex(c => c.action === 'secondchance' && !c.used);
+        if (scIdx >= 0) {
+          player.actionCards[scIdx].used = true;
+        }
+        return 'sc_saved';
+      } else {
+        player.cards.push(card);
+        player.tableCards.push(card);
+        player.status = 'busted';
+        // Discard all player cards at end of round resolution
+        return 'busted';
+      }
+    } else {
+      player.cards.push(card);
+      player.tableCards.push(card);
+      // Check flip7
+      if (player.cards.length >= 7) {
+        // Count unique numbers (they should all be unique if we got here)
+        const uniq = new Set(player.cards.map(c => c.value));
+        if (uniq.size >= 7) {
+          player.status = 'flip7';
+          return 'flip7';
+        }
+      }
+      return 'ok';
+    }
+  } else if (card.type === 'modifier') {
+    player.modifiers.push(card);
+    player.tableCards.push(card);
+    return 'ok';
+  }
+  return 'ok';
+}
+
+function calcRoundScore(player) {
+  if (player.status === 'busted') return 0;
+  let sum = player.cards.reduce((a, c) => a + c.value, 0);
+  // Apply x2 first
+  if (player.modifiers.some(m => m.mod === 'x2')) sum *= 2;
+  // Then add +N
+  for (const m of player.modifiers) {
+    if (m.mod.startsWith('+')) sum += parseInt(m.mod.slice(1));
+  }
+  // Flip7 bonus
+  if (player.status === 'flip7') sum += 15;
+  return Math.max(0, sum);
+}
+
+function hasCardInFront(player) {
+  return !!player && (
+    player.cards.length > 0 ||
+    player.modifiers.length > 0 ||
+    player.actionCards.length > 0 ||
+    hasUnusedSecondChance(player)
+  );
+}
+
+const TIMING = {
+  aiThinkMin: 1500,
+  aiThinkJitter: 1200,
+  aiNextTurnPause: 900,
+  actionAutoTarget: 900,
+  actionResultReveal: 1300,
+  forcedDrawPause: 1100,
+  bustReveal: 1800,
+  flip7Reveal: 1500,
+  bustShake: 900,
+};
+
+// ════════════════════════════════════════════════════════════
+//  TURN LOGIC
+// ════════════════════════════════════════════════════════════
+function activePlayers() {
+  return state.players.filter(p => p.status === 'active');
+}
+
+function clearAITurnTimer() {
+  if (state.aiTurnTimer) {
+    clearTimeout(state.aiTurnTimer);
+    state.aiTurnTimer = null;
+  }
+}
+
+function advanceToNextActive(scheduleAI = true) {
+  // Find next active player after current
+  const n = state.players.length;
+  let checked = 0;
+  do {
+    state.currentIdx = (state.currentIdx + 1) % n;
+    checked++;
+  } while (state.players[state.currentIdx].status !== 'active' && checked <= n);
+
+  if (activePlayers().length === 0) {
+    endRound();
+    return false;
+  }
+  // If next active player is AI, schedule AI turn
+  if (scheduleAI) scheduleAITurnIfNeeded();
+  return true;
+}
+
+function scheduleAITurnIfNeeded() {
+  const p = state.players[state.currentIdx];
+  if (p && p.isAI && p.status === 'active' && state.roundActive) {
+    clearAITurnTimer();
+    const scheduledIdx = state.currentIdx;
+    const thinkDelay = TIMING.aiThinkMin + Math.random() * TIMING.aiThinkJitter;
+    showAIThinking(state.currentIdx);
+    state.aiTurnTimer = setTimeout(() => {
+      state.aiTurnTimer = null;
+      if (!state.roundActive) return;
+      if (state.currentIdx !== scheduledIdx) return;
+      if (state.players[state.currentIdx]?.status !== 'active') return;
+      hideAIThinking();
+      doAITurn(state.currentIdx);
+    }, thinkDelay);
+  }
+}
+
+function playerHit() {
+  const pIdx = state.currentIdx;
+  const player = state.players[pIdx];
+  if (player.status !== 'active') return;
+
+  // If flip3 state active
+  if (state.flip3State && state.flip3State.playerIdx === pIdx) {
+    processFlip3Draw(pIdx);
+    return;
+  }
+
+  const card = drawCard();
+  if (!card) { endRound(); return; }
+
+  if (card.type === 'action') {
+    // Show action card, then target selection
+    state.pendingActionCard = {
+      card,
+      sourceIdx: pIdx,
+      isDealPhase: false,
+      onResolve: (outcomeText) => {
+        moveTurnAfterResolvedAction(outcomeText);
+      }
+    };
+    renderGame();
+    showTargetSelection(card, false);
+    return;
+  }
+
+  const result = applyCardToPlayer(pIdx, card);
+  renderGame();
+
+  if (result === 'flip7') {
+    setTimeout(() => endRoundFlip7(pIdx), TIMING.flip7Reveal);
+    return;
+  }
+  if (result === 'busted') {
+    triggerBustAnimation(pIdx);
+    setTimeout(() => {
+      finishTurnWithDialog(pIdx, `${player.name} paloi ja saa tältä kierrokselta 0 pistettä.`);
+    }, TIMING.bustReveal);
+    return;
+  }
+  if (result === 'sc_saved') {
+    finishTurnWithDialog(pIdx, `${player.name} käytti Toisen Mahdollisuuden ja vältti palamisen.`);
+    return;
+  }
+  checkRoundEnd();
+}
+
+function processFlip3Draw(pIdx) {
+  const fs = state.flip3State;
+  const card = drawCard();
+  if (!card) {
+    state.flip3State = null;
+    checkRoundEnd();
+    return;
+  }
+
+  if (card.type === 'action') {
+    if (card.action === 'secondchance') {
+      // Second Chance is taken immediately and can protect later Flip Three draws.
+      fs.remaining--;
+      resolveSecondChanceCard(pIdx, card, () => {
+        renderGame();
+        if (fs.remaining <= 0) {
+          state.flip3State = null;
+          resolvePendingActions(pIdx, fs.pending);
+        }
+      });
+      return;
+    } else {
+      // flip3 or freeze resolved AFTER all 3 drawn
+      showActionCardInHand(pIdx, card);
+      fs.pending.push(card);
+      fs.remaining--;
+    }
+  } else {
+    const result = applyCardToPlayer(pIdx, card);
+    fs.remaining--;
+    if (result === 'flip7') {
+      discardActionCards(fs.pending);
+      state.flip3State = null;
+      renderGame();
+      setTimeout(() => endRoundFlip7(pIdx), TIMING.flip7Reveal);
+      return;
+    }
+    if (result === 'busted') {
+      discardActionCards(fs.pending);
+      state.flip3State = null;
+      renderGame();
+      triggerBustAnimation(pIdx);
+      setTimeout(() => {
+        finishTurnWithDialog(pIdx, `${state.players[pIdx].name} paloi Nosta kolme -kortin aikana.`);
+      }, TIMING.bustReveal);
+      return;
+    }
+  }
+
+  renderGame();
+
+  if (fs.remaining <= 0) {
+    // Resolve pending
+    state.flip3State = null;
+    resolvePendingActions(pIdx, fs.pending);
+  }
+}
+
+function resolvePendingActions(pIdx, pending, doneCb = null) {
+  assignPendingActions(pIdx, pending, [], assignments => {
+    resolveAssignedPendingActions(assignments, doneCb);
+  });
+}
+
+function assignPendingActions(pIdx, pending, assignments, doneCb) {
+  if (pending.length === 0) {
+    doneCb(assignments);
+    return;
+  }
+  const ac = pending.shift();
+  if (ac.action === 'secondchance') {
+    resolveSecondChanceCard(pIdx, ac, () => assignPendingActions(pIdx, pending, assignments, doneCb));
+    return;
+  }
+  showPendingActionAssignment(pIdx, ac, targetIdx => {
+    assignments.push({ card: ac, targetIdx, sourceIdx: pIdx });
+    assignPendingActions(pIdx, pending, assignments, doneCb);
+  });
+}
+
+function showPendingActionAssignment(sourceIdx, card, onChoose) {
+  const source = state.players[sourceIdx];
+  const targets = getActionTargets(card, true);
+  if (targets.length === 0) return onChoose(sourceIdx);
+
+  if (source?.isAI) {
+    const targetIdx = chooseAIActionTargetIdx(card, sourceIdx, targets);
+    setTimeout(() => onChoose(targetIdx), TIMING.actionAutoTarget);
+    return;
+  }
+
+  const ts = document.getElementById('target-selection');
+  const na = document.getElementById('normal-actions');
+  const tl = document.getElementById('target-label');
+  const tb = document.getElementById('target-btns');
+
+  tl.textContent = card.action === 'freeze' ? '❄️ Kenelle PAKASTE?' : '🃏 Kenelle NOSTA KOLME?';
+  tb.innerHTML = '';
+  for (const { p, i } of targets) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-target';
+    btn.textContent = p.name;
+    if (i === sourceIdx) btn.textContent += ' (sinä)';
+    btn.addEventListener('click', () => {
+      ts.classList.remove('visible');
+      na.style.display = '';
+      onChoose(i);
+    });
+    tb.appendChild(btn);
+  }
+  ts.classList.add('visible');
+  na.style.display = 'none';
+}
+
+function resolveAssignedPendingActions(assignments, doneCb = null) {
+  if (assignments.length === 0) {
+    if (doneCb) doneCb();
+    else checkRoundEnd();
+    return;
+  }
+  const { card, targetIdx, sourceIdx } = assignments.shift();
+  state.pendingActionCard = {
+    card,
+    sourceIdx,
+    isDealPhase: true,
+    onResolve: () => resolveAssignedPendingActions(assignments, doneCb)
+  };
+  renderGame();
+  resolveActionCard(card, targetIdx, true);
+}
+
+function autoProcessFlip3(pIdx, afterPending = [], doneCb = null) {
+  if (!state.flip3State || state.flip3State.remaining <= 0) {
+    if (doneCb) doneCb();
+    return;
+  }
+
+  const card = drawCard();
+  if (!card) {
+    state.flip3State = null;
+    resolvePendingActions(pIdx, afterPending, doneCb);
+    return;
+  }
+
+  const fs = state.flip3State;
+  if (card.type === 'action') {
+    if (card.action === 'secondchance') {
+      fs.remaining--;
+      resolveSecondChanceCard(pIdx, card, () => continueAutoFlip3(pIdx, afterPending, doneCb));
+      return;
+    } else {
+      showActionCardInHand(pIdx, card);
+      fs.pending.push(card);
+    }
+    fs.remaining--;
+  } else {
+    const result = applyCardToPlayer(pIdx, card);
+    fs.remaining--;
+    if (result === 'flip7') {
+      discardActionCards(fs.pending, afterPending);
+      state.flip3State = null;
+      renderGame();
+      setTimeout(() => endRoundFlip7(pIdx), TIMING.flip7Reveal);
+      return;
+    }
+    if (result === 'busted') {
+      discardActionCards(fs.pending, afterPending);
+      state.flip3State = null;
+      renderGame();
+      triggerBustAnimation(pIdx);
+      setTimeout(() => {
+        if (doneCb) doneCb();
+        else moveTurnAfterResolvedAction();
+      }, TIMING.bustReveal);
+      return;
+    }
+  }
+
+  renderGame();
+  continueAutoFlip3(pIdx, afterPending, doneCb);
+}
+
+function continueAutoFlip3(pIdx, afterPending = [], doneCb = null) {
+  const fs = state.flip3State;
+  renderGame();
+  if (!fs) {
+    if (doneCb) doneCb();
+    return;
+  }
+  if (fs.remaining > 0) {
+    setTimeout(() => autoProcessFlip3(pIdx, afterPending, doneCb), TIMING.forcedDrawPause);
+  } else {
+    const newPending = [...fs.pending, ...afterPending];
+    state.flip3State = null;
+    resolvePendingActions(pIdx, newPending, doneCb);
+  }
+}
+
+
+function discardActionCard(card) {
+  if (card) state.discardPile.push(card);
+}
+
+function discardActionCards(...groups) {
+  for (const group of groups) {
+    for (const card of group || []) {
+      discardActionCard(card);
+    }
+  }
+}
+
+function showActionCardInHand(pIdx, card) {
+  const player = state.players[pIdx];
+  if (!player || !card) return;
+  if (!player.tableCards.includes(card)) player.tableCards.push(card);
+}
+
+function keepUsedActionCard(pIdx, card) {
+  const player = state.players[pIdx];
+  if (!player || !card) return;
+  card.used = true;
+  if (!player.actionCards.includes(card)) player.actionCards.push(card);
+  showActionCardInHand(pIdx, card);
+}
+
+function giveSecondChance(pIdx, card = null) {
+  const player = state.players[pIdx];
+  if (!player || player.status !== 'active') return false;
+
+  const scCard = card || { type: 'action', action: 'secondchance' };
+
+  if (!hasUnusedSecondChance(player)) {
+    player.secondChance = true;
+    if (!player.actionCards.some(a => a.action === 'secondchance' && !a.used)) {
+      player.actionCards.push(scCard);
+      showActionCardInHand(pIdx, scCard);
+    }
+    return true;
+  }
+
+  return false;
+}
+
+function getSecondChanceTransferTargets(fromIdx) {
+  return state.players
+    .map((p, i) => ({ p, i }))
+    .filter(({ p, i }) => i !== fromIdx && p.status === 'active' && !hasUnusedSecondChance(p));
+}
+
+function resolveSecondChanceCard(receiverIdx, card, doneCb = null) {
+  if (giveSecondChance(receiverIdx, card)) {
+    if (doneCb) doneCb();
+    return;
+  }
+
+  const targets = getSecondChanceTransferTargets(receiverIdx);
+  if (targets.length === 0) {
+    discardActionCard(card);
+    if (doneCb) doneCb();
+    return;
+  }
+
+  const receiver = state.players[receiverIdx];
+  if (receiver?.isAI) {
+    const aiTarget = targets.find(({ p }) => p.isAI) || targets[0];
+    giveSecondChance(aiTarget.i, card) || discardActionCard(card);
+    if (doneCb) doneCb();
+    return;
+  }
+
+  showSecondChanceTransferSelection(receiverIdx, card, targets, doneCb);
+}
+
+function moveTurnAfterResolvedAction(outcomeText = null) {
+  if (activePlayers().length === 0) {
+    endRound();
+    return;
+  }
+  const prevIdx = state.currentIdx;
+  finishTurnWithDialog(prevIdx, outcomeText || `${state.players[prevIdx].name} ratkaisi action-kortin.`);
+}
+
+function applyFreeze(pIdx, card = null) {
+  const player = state.players[pIdx];
+  if (player.status !== 'active') return;
+  keepUsedActionCard(pIdx, card);
+  player.status = 'stayed';
+}
+
+function applySecondChance(pIdx, afterPending) {
+  // Compatibility wrapper for old call sites.
+  resolveSecondChanceCard(pIdx, null, () => resolvePendingActions(pIdx, afterPending));
+}
+
+function finishTurnWithDialog(prevIdx, outcomeText) {
+  const hasNext = advanceToNextActive(false);
+  renderGame();
+  if (!hasNext || !state.roundActive) return;
+  showTurnTransitionModal(prevIdx, outcomeText, state.currentIdx);
+}
+
+function playerStay() {
+  const pIdx = state.currentIdx;
+  const player = state.players[pIdx];
+  if (player.status !== 'active') return;
+  if (!hasCardInFront(player)) return; // must have at least 1 card
+  player.status = 'stayed';
+  finishTurnWithDialog(pIdx, `${player.name} pysähtyi ja pankkaa ${calcRoundScore(player)} kierrospistettä.`);
+}
+
+function checkRoundEnd() {
+  if (activePlayers().length === 0) {
+    endRound();
+  }
+}
+
+function endRoundFlip7(pIdx) {
+  // End round, give pIdx flip7 bonus
+  state.roundActive = false;
+  // Mark everyone else as out if still active
+  for (let i = 0; i < state.players.length; i++) {
+    if (i !== pIdx && state.players[i].status === 'active') {
+      state.players[i].status = 'stayed';
+    }
+  }
+  endRound(pIdx);
+}
+
+function endRound(flip7Player = null) {
+  if (state.roundScored) return;
+  clearAITurnTimer();
+  state.roundScored = true;
+  state.roundActive = false;
+
+  // Calculate scores
+  const roundScores = state.players.map(p => calcRoundScore(p));
+  for (let i = 0; i < roundScores.length; i++) {
+    state.totalScores[i] += roundScores[i];
+  }
+
+  // Check win condition: if several players reach 200 in the same round,
+  // the highest total score wins.
+  const winner = state.totalScores.reduce((bestIdx, score, i) => {
+    if (score < 200) return bestIdx;
+    if (bestIdx === -1 || score > state.totalScores[bestIdx]) return i;
+    return bestIdx;
+  }, -1);
+
+  renderGame();
+  showRoundEndModal(roundScores, flip7Player, winner);
+}
+
+// ════════════════════════════════════════════════════════════
+//  TARGET SELECTION (Action cards)
+// ════════════════════════════════════════════════════════════
+function getActionSourceIdx(isDealPhase) {
+  return isDealPhase && state.pendingActionCard?.sourceIdx !== undefined
+    ? state.pendingActionCard.sourceIdx
+    : state.currentIdx;
+}
+
+function getActionTargets(card, isDealPhase) {
+  return state.players
+    .map((p, i) => ({ p, i }))
+    .filter(({ p }) => p.status === 'active');
+}
+
+function showTargetSelection(card, isDealPhase) {
+  // If current player is AI, auto-choose
+  const sourceIdx = getActionSourceIdx(isDealPhase);
+  const cur = state.players[sourceIdx];
+  if (cur && cur.isAI) {
+    aiChooseActionTarget(card, isDealPhase);
+    return;
+  }
+
+  const ts = document.getElementById('target-selection');
+  const na = document.getElementById('normal-actions');
+  const tl = document.getElementById('target-label');
+  const tb = document.getElementById('target-btns');
+
+  const activePls = getActionTargets(card, isDealPhase);
+
+  let label = '';
+  if (card.action === 'freeze') label = '❄️ Kenelle PAKASTE?';
+  else if (card.action === 'flip3') label = '🃏 Kenelle NOSTA KOLME?';
+  else if (card.action === 'secondchance') label = '❤️ Kenelle TOINEN MAHDOLLISUUS?';
+
+  tl.textContent = label;
+  tb.innerHTML = '';
+
+  for (const { p, i } of activePls) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-target';
+    btn.textContent = p.name;
+    if (i === sourceIdx) btn.textContent += ' (sinä)';
+    btn.addEventListener('click', () => {
+      resolveActionCard(card, i, isDealPhase);
+    });
+    tb.appendChild(btn);
+  }
+
+  ts.classList.add('visible');
+  na.style.display = 'none';
+}
+
+function showSecondChanceTransferSelection(fromIdx, card, targets, doneCb = null) {
+  const ts = document.getElementById('target-selection');
+  const na = document.getElementById('normal-actions');
+  const tl = document.getElementById('target-label');
+  const tb = document.getElementById('target-btns');
+
+  tl.textContent = '❤️ Kenelle ylimääräinen TOINEN MAHDOLLISUUS?';
+  tb.innerHTML = '';
+
+  for (const { p, i } of targets) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-target';
+    btn.textContent = p.name;
+    btn.addEventListener('click', () => {
+      ts.classList.remove('visible');
+      na.style.display = '';
+      giveSecondChance(i, card) || discardActionCard(card);
+      renderGame();
+      if (doneCb) doneCb();
+    });
+    tb.appendChild(btn);
+  }
+
+  ts.classList.add('visible');
+  na.style.display = 'none';
+}
+
+// AI chooses action card target
+function chooseAIActionTargetIdx(card, sourceIdx, activePls) {
+  if (activePls.length === 0) {
+    return sourceIdx;
+  }
+
+  if (card.action === 'freeze' || card.action === 'flip3') {
+    // Target the biggest threat, but avoid self with harmful cards when possible.
+    const opponents = activePls.filter(({ i }) => i !== sourceIdx);
+    const humans = opponents.filter(({p}) => !p.isAI);
+    const pool = humans.length > 0 ? humans : (opponents.length > 0 ? opponents : activePls);
+    // Pick the one with most current round score (most threat)
+    return pool.reduce((best, cur) =>
+      calcRoundScore(cur.p) > calcRoundScore(best.p) ? cur : best
+    ).i;
+  }
+  if (card.action === 'secondchance') {
+    // Give to self if possible, else to AI ally, else to anyone
+    const self = activePls.find(({i}) => i === sourceIdx);
+    if (self && !hasUnusedSecondChance(self.p)) {
+      return self.i;
+    }
+    const aiPl = activePls.find(({p, i}) => p.isAI && !hasUnusedSecondChance(p) && i !== sourceIdx);
+    return aiPl ? aiPl.i : activePls[0].i;
+  }
+  return activePls[0].i;
+}
+
+function aiChooseActionTarget(card, isDealPhase) {
+  const sourceIdx = getActionSourceIdx(isDealPhase);
+  const activePls = getActionTargets(card, isDealPhase);
+  if (activePls.length === 0) {
+    if (state.pendingActionCard?.onResolve) state.pendingActionCard.onResolve();
+    state.pendingActionCard = null;
+    return;
+  }
+
+  const targetIdx = chooseAIActionTargetIdx(card, sourceIdx, activePls);
+
+  // Small delay so player can see what happened
+  setTimeout(() => resolveActionCard(card, targetIdx, isDealPhase), TIMING.actionAutoTarget);
+}
+
+function resolveActionCard(card, targetIdx, isDealPhase) {
+  const ts = document.getElementById('target-selection');
+  const na = document.getElementById('normal-actions');
+  ts.classList.remove('visible');
+  na.style.display = '';
+
+  const sourceIdx = state.pendingActionCard?.sourceIdx ?? state.currentIdx;
+  const cb = state.pendingActionCard?.onResolve || null;
+  state.pendingActionCard = null;
+
+  const finish = () => {
+    renderGame();
+    if (cb) cb();
+    else checkRoundEnd();
+  };
+
+  const finishNormalAction = (outcomeText = null) => {
+    renderGame();
+    if (cb) cb(outcomeText);
+    else moveTurnAfterResolvedAction(outcomeText);
+  };
+
+  const player = state.players[targetIdx];
+  if (!player || player.status !== 'active') {
+    discardActionCard(card);
+    finish();
+    return;
+  }
+
+  if (card.action === 'freeze') {
+    applyFreeze(targetIdx, card);
+    const outcomeText = `${state.players[sourceIdx].name} käytti Pakasteen: ${player.name} pysähtyi.`;
+    renderGame();
+    setTimeout(() => {
+      if (isDealPhase) finish();
+      else finishNormalAction(outcomeText);
+    }, TIMING.actionResultReveal);
+
+  } else if (card.action === 'flip3') {
+    keepUsedActionCard(targetIdx, card);
+    state.flip3State = { playerIdx: targetIdx, remaining: 3, pending: [] };
+    renderGame();
+    const outcomeText = `${state.players[sourceIdx].name} käytti Nosta kolme -kortin: ${player.name} nosti pakotetut kortit.`;
+    autoProcessFlip3(targetIdx, [], isDealPhase ? finish : () => finishNormalAction(outcomeText));
+
+  } else if (card.action === 'secondchance') {
+    resolveSecondChanceCard(targetIdx, card, isDealPhase ? finish : finishNormalAction);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  RENDERING
+// ════════════════════════════════════════════════════════════
+function renderGame() {
+  renderTopBar();
+  renderScoresStrip();
+  renderPlayers();
+  renderActionArea();
+}
+
+function renderTopBar() {
+  document.getElementById('round-info').textContent = `KIERROS ${state.round}`;
+  document.getElementById('deck-info').textContent = `${state.deck.length} korttia`;
+}
+
+function renderScoresStrip() {
+  const strip = document.getElementById('scores-strip');
+  const compactScores = state.playerNames.length >= 5;
+  strip.className = 'scores-strip' + (compactScores ? ' compact-scores' : '');
+  strip.innerHTML = '';
+  for (let i = 0; i < state.playerNames.length; i++) {
+    const chip = document.createElement('div');
+    chip.className = 'score-chip' + (i === state.dealerIdx ? ' current-dealer' : '');
+    chip.innerHTML = `
+      ${compactScores ? '' : `<span class="chip-name">${escapeHTML(state.playerNames[i])}</span>`}
+      <span class="chip-pts">${state.totalScores[i]}</span>
+    `;
+    strip.appendChild(chip);
+  }
+}
+
+function renderPlayers() {
+  const area = document.getElementById('players-area');
+  const previousKeysByPlayer = lastRenderedCardKeysByPlayer;
+  const nextKeysByPlayer = [];
+  const displayCurrentIdx = getDisplayCurrentIdx();
+  area.innerHTML = '';
+  for (let i = 0; i < state.players.length; i++) {
+    const visibleCards = getVisibleCardEntries(state.players[i]);
+    nextKeysByPlayer[i] = visibleCards.map(entry => entry.key);
+    area.appendChild(buildPlayerCard(i, visibleCards, previousKeysByPlayer[i] || [], displayCurrentIdx));
+  }
+  lastRenderedCardKeysByPlayer = nextKeysByPlayer;
+}
+
+function getDisplayCurrentIdx() {
+  return state.pendingActionCard?.isDealPhase && state.pendingActionCard.sourceIdx !== undefined
+    ? state.pendingActionCard.sourceIdx
+    : state.currentIdx;
+}
+
+function buildPlayerCard(pIdx, visibleCards, previousCardKeys, displayCurrentIdx) {
+  const p = state.players[pIdx];
+  const isCurrentTurn = pIdx === displayCurrentIdx && p.status === 'active' && state.roundActive;
+  const compactCards = getCompactCardsStyle(visibleCards.length);
+  const previousKeyCounts = previousCardKeys.reduce((counts, key) => {
+    counts[key] = (counts[key] || 0) + 1;
+    return counts;
+  }, {});
+  const cardsHtml = visibleCards.map(entry => {
+    const shouldAnimate = !previousKeyCounts[entry.key];
+    if (previousKeyCounts[entry.key]) previousKeyCounts[entry.key]--;
+    return renderMiniCard(entry.card, shouldAnimate);
+  }).join('');
+
+  const div = document.createElement('div');
+  div.className = 'player-card' +
+    (isCurrentTurn ? ' active-turn' : '') +
+    (p.status === 'busted' ? ' busted' : '') +
+    (p.status === 'stayed' ? ' stayed' : '') +
+    (p.status === 'flip7' ? ' flip7-winner flip7-anim' : '');
+  div.id = `player-card-${pIdx}`;
+
+  let statusText = '';
+  let statusClass = '';
+  if (p.status === 'active') { statusText = isCurrentTurn ? 'VUORO' : 'AKTIIVINEN'; statusClass = 'status-active'; }
+  else if (p.status === 'busted') { statusText = 'PALOI!'; statusClass = 'status-busted'; }
+  else if (p.status === 'stayed') { statusText = 'PYSÄHTYY'; statusClass = 'status-stayed'; }
+  else if (p.status === 'flip7') { statusText = 'FLIP 7! 🎉'; statusClass = 'status-flip7'; }
+
+  const roundScore = p.status !== 'busted' ? calcRoundScore(p) : 0;
+  const numSum = p.cards.reduce((a,c) => a+c.value, 0);
+  const playerName = escapeHTML(p.name);
+
+  div.innerHTML = `
+    <div class="player-header">
+      <div class="player-name-tag">
+        ${p.isDealer ? '<span class="dealer-badge">Jakaja</span>' : ''}
+        <span class="player-name">${playerName}${p.isAI ? '<span class="ai-badge">AI</span>' : ''}</span>
+      </div>
+      <span class="player-status ${statusClass}">${statusText}</span>
+    </div>
+    <div class="cards-row${compactCards.className}" id="cards-row-${pIdx}"${compactCards.styleAttr}>
+      ${cardsHtml}
+    </div>
+    ${p.status !== 'busted' && (p.cards.length > 0 || p.modifiers.length > 0) ?
+      `<div class="round-score">Kierrospisteet: ${roundScore}${p.lastAIProb !== null ? `<span class="ai-prob ${p.lastAIProb > 40 ? 'danger' : 'safe'}"> · palamisriski ${p.lastAIProb}%</span>` : ''}</div>` : ''}
+  `;
+  return div;
+}
+
+function getCompactCardsStyle(cardCount) {
+  if (cardCount <= 8) return { className: '', styleAttr: '' };
+  const overlap = Math.max(-19, Math.min(0, Math.floor((332 - (cardCount * 38)) / (cardCount - 1))));
+  return {
+    className: ' compact-cards',
+    styleAttr: ` style="--card-overlap: ${overlap}px"`
+  };
+}
+
+function getVisibleCardEntries(player) {
+  const counts = {};
+  const entries = [];
+  const addCard = (card, prefix) => {
+    const value = card.type === 'number' ? card.value : (card.mod || card.action);
+    const baseKey = `${prefix}:${card.type}:${value}`;
+    counts[baseKey] = (counts[baseKey] || 0) + 1;
+    entries.push({ card, key: `${baseKey}:${counts[baseKey]}` });
+  };
+
+  if (player.tableCards) {
+    player.tableCards.forEach(card => addCard(card, 'table'));
+  } else {
+    player.cards.forEach(card => addCard(card, 'number'));
+    player.modifiers.forEach(card => addCard(card, 'modifier'));
+    player.actionCards.forEach(card => addCard(card, 'action'));
+    if (player.secondChance && !player.actionCards.some(a => a.action === 'secondchance')) {
+      addCard({ type: 'action', action: 'secondchance' }, 'action');
+    }
+  }
+  return entries;
+}
+
+function renderMiniCard(card, animate = false) {
+  const animationClass = animate ? ' card-flip-in' : '';
+  const usedClass = card.used ? ' action-used' : '';
+  if (card.type === 'number') {
+    const v = card.value;
+    const colorClass = v === 0 ? 'num-0' : 'num';
+    return `<div class="mini-card ${colorClass}${usedClass}${animationClass}">${v}</div>`;
+  }
+  if (card.type === 'modifier') {
+    return `<div class="mini-card mod${animationClass}"><sub>MOD</sub>${card.mod}</div>`;
+  }
+  if (card.type === 'action' || card.action) {
+    const a = card.action;
+    if (a === 'freeze') return `<div class="mini-card action-freeze${usedClass}${animationClass}">❄️<sub>PAKASTE</sub></div>`;
+    if (a === 'flip3') return `<div class="mini-card action-flip3${usedClass}${animationClass}">🃏<sub>NOSTA3</sub></div>`;
+    if (a === 'secondchance') return `<div class="mini-card action-sc${usedClass}${animationClass}">❤️<sub>2.MAHL</sub></div>`;
+  }
+  return '';
+}
+
+function renderActionArea() {
+  const prompt = document.getElementById('action-prompt');
+  const hitBtn = document.getElementById('hit-btn');
+  const stayBtn = document.getElementById('stay-btn');
+  const flip3Ind = document.getElementById('flip3-indicator');
+  const flip3Dots = document.getElementById('flip3-dots');
+
+  if (!state.roundActive) {
+    hitBtn.disabled = true;
+    stayBtn.disabled = true;
+    flip3Ind.classList.remove('visible');
+    prompt.innerHTML = '';
+    return;
+  }
+
+  const pIdx = getDisplayCurrentIdx();
+  const player = state.players[pIdx];
+
+  // Flip3 indicator
+  if (state.flip3State && state.flip3State.playerIdx === pIdx) {
+    flip3Ind.classList.add('visible');
+    const rem = state.flip3State.remaining;
+    flip3Dots.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const d = document.createElement('div');
+      d.className = 'flip3-dot' + (i < (3 - rem) ? ' filled' : '');
+      flip3Dots.appendChild(d);
+    }
+    hitBtn.disabled = false;
+    stayBtn.disabled = true;
+    prompt.innerHTML = `<strong>${escapeHTML(player.name)}</strong> — pakko nostaa`;
+  } else {
+    flip3Ind.classList.remove('visible');
+    const hasCard = hasCardInFront(player);
+    const isAITurn = player && player.isAI && player.status === 'active';
+    hitBtn.disabled = !player || player.status !== 'active' || isAITurn;
+    stayBtn.disabled = !player || player.status !== 'active' || !hasCard || isAITurn;
+    if (player && player.status === 'active') {
+      if (isAITurn) {
+        prompt.innerHTML = `🤖 <strong>${escapeHTML(player.name)}</strong> miettii...`;
+      } else {
+        prompt.innerHTML = `<strong>${escapeHTML(player.name)}</strong> — nosta vai pysäytä?`;
+      }
+    } else {
+      prompt.innerHTML = '';
+    }
+  }
+}
+
+function triggerBustAnimation(pIdx) {
+  const card = document.getElementById(`player-card-${pIdx}`);
+  if (card) {
+    card.classList.add('bust-shake');
+    setTimeout(() => card.classList.remove('bust-shake'), TIMING.bustShake);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  MODALS
+// ════════════════════════════════════════════════════════════
+let turnModalKeyHandler = null;
+
+function closeTurnTransitionModal() {
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.remove('visible');
+  if (turnModalKeyHandler) {
+    document.removeEventListener('keydown', turnModalKeyHandler);
+    turnModalKeyHandler = null;
+  }
+  scheduleAITurnIfNeeded();
+}
+
+function showTurnTransitionModal(prevIdx, outcomeText, nextIdx) {
+  clearAITurnTimer();
+  const overlay = document.getElementById('modal-overlay');
+  const icon = document.getElementById('modal-icon');
+  const title = document.getElementById('modal-title');
+  const body = document.getElementById('modal-body');
+  const sl = document.getElementById('modal-score-list');
+  const btn = document.getElementById('modal-btn');
+  const nextPlayer = state.players[nextIdx];
+
+  icon.textContent = '➡️';
+  title.className = 'modal-title round-end';
+  title.textContent = 'VUORO VAIHTUU';
+  body.innerHTML = `${escapeHTML(outcomeText)}<br><br>Seuraavaksi vuorossa: <strong>${escapeHTML(nextPlayer.name)}</strong>`;
+  sl.innerHTML = '';
+  btn.textContent = 'JATKA';
+  btn.onclick = closeTurnTransitionModal;
+
+  if (turnModalKeyHandler) document.removeEventListener('keydown', turnModalKeyHandler);
+  turnModalKeyHandler = (e) => {
+    if (!overlay.classList.contains('visible')) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      closeTurnTransitionModal();
+    }
+  };
+  document.addEventListener('keydown', turnModalKeyHandler);
+  overlay.classList.add('visible');
+}
+
+function showRoundEndModal(roundScores, flip7Player, winner) {
+  const overlay = document.getElementById('modal-overlay');
+  const icon = document.getElementById('modal-icon');
+  const title = document.getElementById('modal-title');
+  const body = document.getElementById('modal-body');
+  const sl = document.getElementById('modal-score-list');
+  const btn = document.getElementById('modal-btn');
+
+  if (flip7Player !== null) {
+    icon.textContent = '🎉';
+    title.className = 'modal-title flip7';
+    title.textContent = 'FLIP 7!';
+    body.textContent = `${state.players[flip7Player].name} käänsi 7 uniikkia korttia!`;
+  } else {
+    icon.textContent = '⏹️';
+    title.className = 'modal-title round-end';
+    title.textContent = `KIERROS ${state.round} PÄÄTTYI`;
+    body.textContent = 'Kaikki pelaajat ovat pysähtyneet tai palaneet.';
+  }
+
+  sl.innerHTML = '';
+  const sorted = state.players
+    .map((p, i) => ({ name: p.name, round: roundScores[i], total: state.totalScores[i] }))
+    .sort((a, b) => b.round - a.round);
+
+  for (const item of sorted) {
+    const row = document.createElement('div');
+    row.className = 'score-list-item' + (item.total === Math.max(...state.totalScores) ? ' leading' : '');
+    row.innerHTML = `
+      <span class="sli-name">${escapeHTML(item.name)}</span>
+      <span class="sli-pts">+${item.round}</span>
+      <span class="sli-total">= ${item.total}</span>
+    `;
+    sl.appendChild(row);
+  }
+
+  if (winner >= 0) {
+    btn.textContent = 'TULOKSET';
+    btn.onclick = () => {
+      overlay.classList.remove('visible');
+      showWinnerScreen(winner);
+    };
+  } else {
+    btn.textContent = 'SEURAAVA KIERROS';
+    btn.onclick = () => {
+      overlay.classList.remove('visible');
+      nextRound();
+    };
+  }
+
+  overlay.classList.add('visible');
+}
+
+function showWinnerScreen(winnerIdx) {
+  showScreen('winner-screen');
+  document.getElementById('winner-name').textContent = state.playerNames[winnerIdx];
+  document.getElementById('winner-score').textContent = `${state.totalScores[winnerIdx]} pistettä — ${state.round} kierroksen jälkeen`;
+
+  const fs = document.getElementById('final-scores');
+  fs.innerHTML = '';
+  const sorted = state.playerNames
+    .map((n, i) => ({ n, s: state.totalScores[i] }))
+    .sort((a, b) => b.s - a.s);
+  for (const { n, s } of sorted) {
+    const row = document.createElement('div');
+    row.className = 'score-list-item' + (n === state.playerNames[winnerIdx] ? ' leading' : '');
+    row.innerHTML = `<span class="sli-name">${escapeHTML(n)}</span><span class="sli-pts">${s}</span>`;
+    fs.appendChild(row);
+  }
+}
+
+function nextRound() {
+  state.round++;
+  state.dealerIdx = (state.dealerIdx + 1) % state.playerNames.length;
+  // Discard all player cards from this round
+  for (const p of state.players) {
+    for (const c of [...p.cards, ...p.modifiers, ...p.actionCards]) {
+      state.discardPile.push(c);
+    }
+  }
+  startRound();
+  renderGame();
+}
+
+// ════════════════════════════════════════════════════════════
+//  SETUP SCREEN
+// ════════════════════════════════════════════════════════════
+let numPlayers = 3;
+let playerIsAI = [false, true, true, false, false, false];
+
+function renderSetup() {
+  document.getElementById('count-display').textContent = numPlayers;
+  const container = document.getElementById('player-inputs');
+  const existing = [...container.querySelectorAll('.player-input')].map(inp => inp.value);
+  container.innerHTML = '';
+  for (let i = 0; i < numPlayers; i++) {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+
+    const num = document.createElement('div');
+    num.className = 'player-num';
+    num.textContent = i + 1;
+
+    const inp = document.createElement('input');
+    inp.className = 'player-input';
+    inp.type = 'text';
+    inp.maxLength = 12;
+    inp.placeholder = playerIsAI[i] ? `Tekoäly ${i + 1}` : `Pelaaja ${i + 1}`;
+    inp.value = existing[i] || '';
+    if (playerIsAI[i]) inp.disabled = true;
+
+    const toggle = document.createElement('button');
+    toggle.className = 'ai-toggle' + (playerIsAI[i] ? ' is-ai' : '');
+    toggle.title = playerIsAI[i] ? 'Tekoäly' : 'Ihminen';
+    toggle.innerHTML = playerIsAI[i] ? '🤖' : '👤';
+    toggle.addEventListener('click', () => {
+      playerIsAI[i] = !playerIsAI[i];
+      renderSetup();
+    });
+
+    row.appendChild(num);
+    row.appendChild(inp);
+    row.appendChild(toggle);
+    container.appendChild(row);
+  }
+}
+
+document.getElementById('dec-btn').addEventListener('click', () => {
+  if (numPlayers > 3) { numPlayers--; renderSetup(); }
+});
+document.getElementById('inc-btn').addEventListener('click', () => {
+  if (numPlayers < 6) { numPlayers++; renderSetup(); }
+});
+
+document.getElementById('start-btn').addEventListener('click', () => {
+  const rows = document.querySelectorAll('.player-row');
+  const names = [];
+  const aiFlags = [];
+  rows.forEach((row, i) => {
+    const inp = row.querySelector('.player-input');
+    const isAI = playerIsAI[i];
+    aiFlags.push(isAI);
+    names.push(isAI ? inp.placeholder : (inp.value.trim() || `Pelaaja ${i + 1}`));
+  });
+  showScreen('game-screen');
+  initGame(names, aiFlags);
+  renderGame();
+});
+
+document.getElementById('hit-btn').addEventListener('click', () => {
+  if (!state.roundActive) return;
+  playerHit();
+});
+document.getElementById('stay-btn').addEventListener('click', () => {
+  if (!state.roundActive) return;
+  playerStay();
+});
+
+document.getElementById('new-game-btn').addEventListener('click', () => {
+  showScreen('setup-screen');
+  renderSetup();
+});
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// Init
+renderSetup();
+
+
+// ════════════════════════════════════════════════════════════
+//  AI LOGIC
+// ════════════════════════════════════════════════════════════
+
+function getRemainingDeckCards() {
+  return state.deck;
+}
+
+function scoreWithAddedCard(player, card) {
+  if (card.type === 'number' && player.cards.some(c => c.value === card.value)) {
+    return hasUnusedSecondChance(player) ? calcRoundScore(player) : 0;
+  }
+
+  const nextPlayer = {
+    ...player,
+    cards: [...player.cards],
+    modifiers: [...player.modifiers],
+    actionCards: [...player.actionCards],
+    status: player.status,
+  };
+
+  if (card.type === 'number') {
+    nextPlayer.cards.push(card);
+    if (nextPlayer.cards.length >= 7 && new Set(nextPlayer.cards.map(c => c.value)).size >= 7) {
+      nextPlayer.status = 'flip7';
+    }
+  } else if (card.type === 'modifier') {
+    nextPlayer.modifiers.push(card);
+  }
+
+  return calcRoundScore(nextPlayer);
+}
+
+// P(bust on next draw) given player's current number set and known deck state
+function calcBustProbability(pIdx) {
+  const player = state.players[pIdx];
+  const myNums = new Set(player.cards.map(c => c.value));
+  const remaining = getRemainingDeckCards();
+  const totalUnseen = remaining.length;
+  if (totalUnseen === 0) return 0;
+
+  const bustCards = remaining
+    .filter(card => card.type === 'number' && myNums.has(card.value))
+    .length;
+
+  // P(bust) = bustCards / totalUnseen
+  return Math.round(100 * bustCards / totalUnseen);
+}
+
+// Expected value of drawing one more card
+function calcExpectedValue(pIdx) {
+  const player = state.players[pIdx];
+  const remaining = getRemainingDeckCards();
+  const totalUnseen = remaining.length;
+  if (totalUnseen === 0) return 0;
+
+  const currentScore = calcRoundScore(player);
+  const totalDelta = remaining.reduce((sum, card) => {
+    if (card.type === 'action') {
+      return sum;
+    }
+    return sum + (scoreWithAddedCard(player, card) - currentScore);
+  }, 0);
+
+  return totalDelta / totalUnseen;
+}
+
+// How many unique numbers does player have / need for flip7
+function numbersToFlip7(pIdx) {
+  return 7 - state.players[pIdx].cards.length;
+}
+
+// AI decision: returns 'hit' or 'stay'
+function aiDecide(pIdx) {
+  const player = state.players[pIdx];
+  const myScore = calcRoundScore(player);
+  const bustProb = calcBustProbability(pIdx);
+  const ev = calcExpectedValue(pIdx);
+  const toFlip7 = numbersToFlip7(pIdx);
+  const hasSecondChance = hasUnusedSecondChance(player);
+  const myTotal = state.totalScores[pIdx];
+  const leadingScore = Math.max(...state.totalScores);
+  const gap = leadingScore - myTotal;
+  const projectedTotal = myTotal + myScore;
+
+  // Show the real bust risk in the UI, even if Second Chance softens the decision.
+  player.lastAIProb = bustProb;
+
+  // Second Chance makes one duplicate safer, but AI should still not play recklessly.
+  const effectiveBustProb = hasSecondChance ? Math.round(bustProb * 0.65) : bustProb;
+
+  // Bank immediately if this round already wins the game, unless Flip 7 is very close and safe.
+  if (projectedTotal >= 200 && !(toFlip7 <= 1 && effectiveBustProb <= 25)) return 'stay';
+
+  // An unused Second Chance should usually be spent as protection for one more draw.
+  if (hasSecondChance && myScore < 35) return 'hit';
+
+  // Very low hands are worth improving.
+  if (myScore < 8 && effectiveBustProb <= 45) return 'hit';
+
+  // Controlled Flip 7 chase: only push near Flip 7 when the risk is reasonable.
+  if (toFlip7 <= 1 && effectiveBustProb <= (hasSecondChance ? 45 : 30)) return 'hit';
+  if (toFlip7 === 2 && myScore < 30 && effectiveBustProb <= (hasSecondChance ? 35 : 22)) return 'hit';
+
+  // Hard safety stops. These are intentionally conservative so AI keeps good hands.
+  if (!hasSecondChance && bustProb >= 35) return 'stay';
+  if (myScore >= 35) return 'stay';
+  if (myScore >= 28 && effectiveBustProb >= 18) return 'stay';
+  if (myScore >= 22 && effectiveBustProb >= 28) return 'stay';
+  if (myTotal >= 160 && myScore >= 15 && effectiveBustProb >= 18) return 'stay';
+  if (myTotal >= 180 && myScore >= 10) return 'stay';
+
+  // If far behind, take a little more risk, but not wild risk.
+  let bustThreshold = 22;
+  if (gap > 60) bustThreshold = 28;
+  if (gap > 100) bustThreshold = 32;
+  if (myTotal >= 150) bustThreshold = Math.min(bustThreshold, 20);
+  if (hasSecondChance) bustThreshold += 8;
+
+  // EV can encourage a draw only when the bust risk is still under control.
+  if (ev > 4 && effectiveBustProb <= bustThreshold && myScore < 28) return 'hit';
+  if (ev < 0 && myScore >= 12) return 'stay';
+
+  return effectiveBustProb <= bustThreshold ? 'hit' : 'stay';
+}
+
+function showAIThinking(pIdx) {
+  const el = document.getElementById('ai-thinking');
+  const txt = document.getElementById('ai-thinking-text');
+  const p = state.players[pIdx];
+  const prob = calcBustProbability(pIdx);
+  p.lastAIProb = prob;
+  txt.textContent = `${p.name} laskee... palamisriski ${prob}%`;
+  el.classList.add('visible');
+  renderGame();
+}
+
+function hideAIThinking() {
+  document.getElementById('ai-thinking').classList.remove('visible');
+}
+
+function doAITurn(pIdx) {
+  const player = state.players[pIdx];
+  if (!player || player.status !== 'active' || !state.roundActive) return;
+
+  const decision = aiDecide(pIdx);
+
+  if (decision === 'stay' && hasCardInFront(player)) {
+    playerStay();
+  } else {
+    playerHit();
+    if (state.roundActive &&
+        state.currentIdx === pIdx &&
+        state.players[pIdx]?.isAI &&
+        state.players[pIdx]?.status === 'active' &&
+        !state.pendingActionCard &&
+        !state.flip3State) {
+      clearAITurnTimer();
+      state.aiTurnTimer = setTimeout(() => {
+        state.aiTurnTimer = null;
+        scheduleAITurnIfNeeded();
+      }, TIMING.aiNextTurnPause);
+    }
+  }
+}
+
+// ── HELP OVERLAY ──
+function openHelp() {
+  document.getElementById('help-overlay').classList.add('visible');
+}
+function closeHelp() {
+  document.getElementById('help-overlay').classList.remove('visible');
+}
+document.getElementById('help-btn-setup').addEventListener('click', openHelp);
+document.getElementById('help-btn-game').addEventListener('click', openHelp);
+document.getElementById('close-help-btn').addEventListener('click', closeHelp);
+// Close on backdrop tap (outside content)
+document.getElementById('help-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeHelp();
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

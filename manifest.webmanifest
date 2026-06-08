@@ -1,0 +1,20 @@
+{
+  "name": "FLIP 7",
+  "short_name": "FLIP 7",
+  "description": "FLIP 7 -korttipeli",
+  "lang": "fi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1a2856",
+  "theme_color": "#1a2856",
+  "icons": [
+    {
+      "src": "app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
