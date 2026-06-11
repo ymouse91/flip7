@@ -103,6 +103,7 @@
   }
   .player-input {
     flex: 1;
+    min-width: 0;
     background: rgba(255,255,255,0.08);
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 10px;
@@ -114,6 +115,12 @@
     outline: none;
   }
   .player-input:focus { border-color: var(--teal); background: rgba(46,196,182,0.1); }
+
+  @media (max-width: 480px) {
+    .player-input {
+      flex: 0 1 calc(100% - 106px);
+    }
+  }
 
   .player-count-row {
     display: flex;
