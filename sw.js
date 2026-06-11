@@ -1,9 +1,10 @@
-const CACHE_NAME = 'flip7-v2';
+const CACHE_NAME = 'flip7-v3';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './app-icon.svg'
+  './icon_512.png',
+  './icon_192.png'
 ];
 
 self.addEventListener('install', event => {
